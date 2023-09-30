@@ -19,17 +19,17 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
-        providers: [
-          BlocProvider(create: (context) => TabbingBloc()),
-          BlocProvider(create: (context) => PostBloc(Repo())),
-          BlocProvider(create: (context) => AlbumScreenBloc()),
-          BlocProvider(create: (context) => PhotoScreenBloc()),
+      providers: [
+        BlocProvider(
+            create: (context) => TabbingBloc(),
+            ),
 
-        ],
-        child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: appColor(),
-          home: SplashScreen(),
-        ));
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: appColor(),
+        home: SplashScreen(),
+      ),
+    );
   }
 }

@@ -1,24 +1,32 @@
 part of 'post_bloc.dart';
 
-@immutable
-  abstract class PostState extends Equatable{}
-
-class PostLoadingStat extends PostState {
-  @override
-  List<Object?> get props => [];
-}
-class PostLoadedStat extends PostState {
+class PostState extends Equatable {
+  final RequestStatus status;
   final List<PostT_Model> posts;
+  final List<CommentsT_Model> comments;
+  final String message;
 
-  PostLoadedStat(this.posts);
+  const PostState({
+    this.status = RequestStatus.initial,
+    this.posts = const <PostT_Model>[],
+    this.comments = const <CommentsT_Model>[],
+    this.message = '',
+  });
+
   @override
-  List<Object?> get props => [posts];
-}
+  List<Object> get props => [status, posts, message];
 
-class PostErrorStat extends PostState {
-final String error;
-
-  PostErrorStat(this.error);
-  @override
-  List<Object?> get props => [error];
+  PostState copyWith({
+    RequestStatus? status,
+    List<PostT_Model>? posts,
+    List<CommentsT_Model>? comments,
+    String? message,
+  }) {
+    return PostState(
+      status: status ?? this.status,
+      posts: posts ?? this.posts,
+      comments: comments ?? this.comments,
+      message: message ?? this.message,
+    );
+  }
 }

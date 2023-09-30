@@ -1,12 +1,12 @@
-
 import 'package:flutter/material.dart';
 import 'dart:math';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:photos_app/Api/repo/repository.dart';
+import 'package:photos_app/Config/constant/app_constant.dart';
+import 'package:photos_app/Model/CommentsT_Model.dart';
 import 'package:photos_app/Model/PostT_Model.dart';
 import 'package:photos_app/Module/Bloc/PostBloc/post_bloc.dart';
-
 
 class PostScreen extends StatelessWidget {
   const PostScreen({super.key});
@@ -16,55 +16,51 @@ class PostScreen extends StatelessWidget {
     return MultiBlocProvider(
         providers: [
           BlocProvider<PostBloc>(
-              create: (BuildContext context) => PostBloc(Repo()))
+              create: (BuildContext context) =>
+                  PostBloc(repo: Repo())..add(LoadPostEvent())),
+
         ],
-        child: Scaffold(
-          body: Container(
-            padding: EdgeInsets.all(20),
-            child: CardList(),
+        child: BlocListener<PostBloc, PostState>(
+          listener: (context, state) {
+            RequestStatus.failure;
+            AlertDialog(
+              title: Text("Faild"),
+            );
+          },
+          child: Scaffold(
+            body: Container(
+              padding: EdgeInsets.all(20),
+              child: CardList(),
+            ),
           ),
         ));
   }
 }
 
 Widget CardList() {
-  return BlocProvider<PostBloc>(
-    create: (context) => PostBloc(Repo())..add(LoadPostEvent()),
-    child: BlocBuilder<PostBloc, PostState>(
-      builder: (context, state) {
-        if (state is PostLoadingStat) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        }
-        if (state is PostLoadedStat) {
-          List<PostT_Model> postsList = state.posts;
-          return Column(
-            children: [
-              Expanded(
-                child: ListView.separated(
-                  separatorBuilder: (BuildContext context, int index) =>
-                      Divider(
-                    color: Colors.white,
-                  ),
-                  itemCount: postsList.length,
-                  itemBuilder: (_,index) {
-                    return PostCard(
-                      userId: "${postsList[index].userId}",
-                      title: "${postsList[index].title}",
-                      description: "${postsList[index].body}",
-                    );
-                  },
-                ),
+  return BlocBuilder<PostBloc, PostState>(
+    builder: (context, state) {
+      List<PostT_Model> postsList = state.posts;
+      return Column(
+        children: [
+          Expanded(
+            child: ListView.separated(
+              separatorBuilder: (BuildContext context, int index) => Divider(
+                color: Colors.white,
               ),
-            ],
-          );
-        }
-        if(state is PostErrorStat){
-        }          return Text('error');
-
-      },
-    ),
+              itemCount: postsList.length,
+              itemBuilder: (_, index) {
+                return PostCard(
+                  userId: "${postsList[index].userId}",
+                  title: "${postsList[index].title}",
+                  description: "${postsList[index].body}", postId: postsList[index].id!,
+                );
+              },
+            ),
+          ),
+        ],
+      );
+    },
   );
 }
 
@@ -72,11 +68,11 @@ class PostCard extends StatelessWidget {
   final String userId;
   final String title;
   final String description;
-
+  final int postId;
   PostCard({
     required this.userId,
     required this.title,
-    required this.description,
+    required this.description, required this.postId,
   });
 
   @override
@@ -90,7 +86,8 @@ class PostCard extends StatelessWidget {
       ),
       child: InkWell(
         onTap: () {
-          // showBottomSheet(context);
+
+          showBottomSheet(context,postId);
         },
         child: Container(
           width: 70,
@@ -149,38 +146,38 @@ class PostCard extends StatelessWidget {
   }
 }
 
-// void showBottomSheet(BuildContext context) {
-//   showModalBottomSheet(
-//       backgroundColor: Colors.white54,
-//       context: context,
-//       builder: (BuildContext context) {
-//         return Obx(
-//           () => controller.isLoading.value
-//               ? Center(child: CircularProgressIndicator())
-//               : Column(
-//                   children: [
-//                     Expanded(
-//                       child: ListView.separated(
-//                         controller: controller.scrollController,
-//                         separatorBuilder: (BuildContext context, int index) =>
-//                             Divider(
-//                           color: Colors.white,
-//                         ),
-//                         itemCount: controller.commentsList.length,
-//                         itemBuilder: (BuildContext context, int index) {
-//                           return Card(
-//                             child: ListTile(
-//                               title: Text(
-//                                   "${controller.commentsList[index].name}"),
-//                               subtitle: Text(
-//                                   "${controller.commentsList[index].body}"),
-//                             ),
-//                           );
-//                         },
-//                       ),
-//                     ),
-//                   ],
-//                 ),
-//         );
-//       });
-// }
+
+
+void showBottomSheet(BuildContext context,int postId) {
+  showModalBottomSheet(
+    context: context,
+    builder: (_) {
+      return BlocProvider(
+  create: (context) => PostBloc(repo: Repo())..add(LoadCommentEvent(postId: postId)),
+  child: BlocBuilder<PostBloc, PostState>(builder: (context, state) {
+        List<CommentsT_Model> commentList = state.comments;
+        return Column(
+          children: [
+            Expanded(
+              child: ListView.separated(
+                separatorBuilder: (BuildContext context, int index) => Divider(
+                  color: Colors.white,
+                ),
+                itemCount: commentList.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return Card(
+                    child: ListTile(
+                      title: Text("${commentList[index].name}"),
+                      subtitle: Text("${commentList[index].body}"),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      }),
+);
+    },
+  );
+}
